@@ -11,6 +11,10 @@ cdk_outputs.json
 .turbo
 test-run-comment.md
 
+# Python
+.venv/
+venv/
+ENV/
 *.egg-info/
 .installed.cfg
 *.egg
