@@ -1,8 +1,21 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Legal Case Analysis Agent - Frontend UI
+
+This is the Next.js frontend application for the Legal Case Analysis Agent. It provides the user interface for interacting with the backend agent to analyze legal cases, view generated reports, and chat about the findings.
+
+This project utilizes [CopilotKit](https://github.com/CopilotKit/CopilotKit) for integrating the AI agent capabilities into the React frontend.
 
 ## Getting Started
 
-First, run the development server:
+Prerequisites:
+*   Node.js and pnpm installed.
+*   The backend Python agent (`../agent/`) should be running.
+
+First, install dependencies:
+```bash
+pnpm install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
@@ -14,13 +27,20 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) (or the configured port) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The main UI logic can be found in `src/app/Main.tsx` and components within `src/components/`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Key Technologies
 
-## Learn More
+*   **Framework:** [Next.js](https://nextjs.org) (App Router)
+*   **Language:** TypeScript
+*   **UI:** [shadcn/ui](https://ui.shadcn.com/), [Tailwind CSS](https://tailwindcss.com/)
+*   **AI Integration:** [@copilotkit/react-core](https://docs.copilotkit.ai/), [@copilotkit/react-ui](https://docs.copilotkit.ai/)
+*   **Styling:** Tailwind CSS
+*   **Font:** [Geist](https://vercel.com/font) (via `next/font`)
+
+## Learn More about Next.js
 
 To learn more about Next.js, take a look at the following resources:
 
