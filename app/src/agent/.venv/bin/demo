@@ -1,6 +1,0 @@
-#!/Users/kounotarou/Documents/AI/legal-case-analyze-agent/app/src/agent/.venv/bin/python
-import sys
-from research_canvas.demo import main
-
-if __name__ == '__main__':
-    sys.exit(main())
