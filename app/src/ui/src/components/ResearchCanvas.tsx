@@ -20,7 +20,7 @@ export function ResearchCanvas() {
   const { model, agent } = useModelSelectorContext();
 
   // Ensure initial state aligns with the new AgentState structure in Main.tsx
-  const { state, setState } = useCoAgent<AgentState>({
+  const { state, setState, run } = useCoAgent<AgentState>({
     name: agent,
     // initial state is primarily set in Main.tsx, but ensure defaults here if needed
     initialState: {
@@ -65,8 +65,8 @@ export function ResearchCanvas() {
         logs: [...(state.logs || []), { message: "Manual case text provided.", done: true }],
       });
       setManualCaseText(""); // Clear the input field
-      // Optionally trigger the agent to continue processing
-      // This depends on how the agent workflow handles state changes
+      // Explicitly trigger the agent to continue processing
+      run();
     }
   };
 
@@ -82,11 +82,28 @@ export function ResearchCanvas() {
             placeholder="Enter the case name (e.g., Marbury v. Madison)"
             value={state.caseName || ""}
             onChange={(e) =>
-              setState({ ...state, caseName: e.target.value })
+              // Only update caseName and reset results when input changes.
+              // Let the backend agent determine if manual input is needed.
+              setState({
+                ...state,
+                caseName: e.target.value,
+                caseText: "", // Clear previous text
+                reportSections: { basic_info: "", summary: "", case_brief: {}, cold_call_qa: [] }, // Clear previous results
+                report: "", // Clear previous report
+                sourcesConsulted: [], // Clear previous sources
+                logs: [], // Clear previous logs
+                needsManualInput: false // Reset manual input flag
+              })
             }
+            // TODO: Add an explicit "Analyze" button or trigger analysis on blur/enter
+            // Currently, analysis might only trigger implicitly via chat or other actions.
             aria-label="Case name"
             className="bg-background px-6 py-8 border-0 shadow-none rounded-xl text-md font-extralight focus-visible:ring-0 placeholder:text-slate-400"
           />
+          {/* Add Analyze button to explicitly trigger the workflow */}
+          <Button onClick={() => run()} disabled={!state.caseName?.trim()} className="mt-2">
+             Analyze Case
+          </Button>
         </div>
 
         {/* Conditional Manual Input Section */}

@@ -1,17 +1,22 @@
 import { ResearchCanvas } from "@/components/ResearchCanvas";
-import { useModelSelectorContext } from "@/lib/model-selector-provider";
+// import { useModelSelectorContext } from "@/lib/model-selector-provider"; // Removed context import
 import { AgentState } from "@/lib/types";
 import { useCoAgent } from "@copilotkit/react-core";
 import { CopilotChat } from "@copilotkit/react-ui";
 import { useCopilotChatSuggestions } from "@copilotkit/react-ui";
 
+// Define the agent ID consistent with the backend server.py
+const AGENT_ID = "research_agent"; // Reverted to match server.py
+
 export default function Main() {
-  const { model, agent } = useModelSelectorContext();
+  // const { model, agent } = useModelSelectorContext(); // Removed context usage
   const { state, setState } = useCoAgent<AgentState>({
-    name: agent,
+    name: AGENT_ID, // Use the fixed agent ID
     // Updated initialState to match the new AgentState structure
     initialState: {
-      model,
+      // model: model, // Model selection might need to be handled differently now
+      model: "openai", // Hardcode default model or manage differently
+      // Removed duplicate model line below
       caseName: "",
       caseText: "",
       reportSections: { basic_info: "", summary: "", case_brief: {}, cold_call_qa: [] },
