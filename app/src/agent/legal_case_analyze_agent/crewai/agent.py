@@ -5,10 +5,10 @@ from typing_extensions import Dict, Any, cast
 from crewai.flow.flow import Flow, start, router, listen
 from litellm import completion
 from copilotkit.crewai import copilotkit_stream, copilotkit_predict_state
-from research_canvas.crewai.download import download_resources, get_resources
-from research_canvas.crewai.delete import maybe_perform_delete
-from research_canvas.crewai.prompt import format_prompt
-from research_canvas.crewai.tools import (
+from legal_case_analyze_agent.crewai.download import download_resources, get_resources # Updated import path
+from legal_case_analyze_agent.crewai.delete import maybe_perform_delete # Updated import path
+from legal_case_analyze_agent.crewai.prompt import format_prompt # Updated import path
+from legal_case_analyze_agent.crewai.tools import ( # Updated import path
     SEARCH_TOOL,
     WRITE_REPORT_TOOL,
     WRITE_RESEARCH_QUESTION_TOOL,
@@ -94,4 +94,3 @@ class ResearchCanvasFlow(Flow[Dict[str, Any]]):
         """
         End the flow.
         """
-

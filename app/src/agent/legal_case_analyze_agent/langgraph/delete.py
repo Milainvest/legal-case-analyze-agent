@@ -4,7 +4,7 @@ import json
 from typing import cast
 from langchain_core.runnables import RunnableConfig
 from langchain_core.messages import ToolMessage, AIMessage
-from research_canvas.langgraph.state import AgentState
+from legal_case_analyze_agent.langgraph.state import AgentState # Updated import path
 
 async def delete_node(state: AgentState, config: RunnableConfig): # pylint: disable=unused-argument
     """

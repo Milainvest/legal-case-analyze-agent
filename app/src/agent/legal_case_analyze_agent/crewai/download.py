@@ -5,7 +5,7 @@ import aiohttp
 import html2text
 from typing_extensions import Dict, Any
 from copilotkit.crewai import copilotkit_emit_state
-from research_canvas.crewai.tools import prepare_state_for_serialization
+from legal_case_analyze_agent.crewai.tools import prepare_state_for_serialization # Updated import path
 
 _RESOURCE_CACHE = {}
 

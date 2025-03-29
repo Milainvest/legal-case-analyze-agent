@@ -9,7 +9,7 @@ from fastapi import FastAPI
 import uvicorn
 from copilotkit.integrations.fastapi import add_fastapi_endpoint
 from copilotkit import CopilotKitRemoteEndpoint, CrewAIAgent
-from research_canvas.crewai.agent import ResearchCanvasFlow
+from legal_case_analyze_agent.crewai.agent import ResearchCanvasFlow # Updated import path
 
 app = FastAPI()
 sdk = CopilotKitRemoteEndpoint(
@@ -35,7 +35,7 @@ def main():
     """Run the uvicorn server."""
     port = int(os.getenv("PORT", "8000"))
     uvicorn.run(
-        "research_canvas.crewai.demo:app",
+        "legal_case_analyze_agent.crewai.demo:app", # Updated module path
         host="0.0.0.0",
         port=port,
         reload=True,

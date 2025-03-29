@@ -11,7 +11,7 @@ from fastapi import FastAPI
 import uvicorn
 from copilotkit.integrations.fastapi import add_fastapi_endpoint
 from copilotkit import CopilotKitRemoteEndpoint, LangGraphAgent
-from research_canvas.langgraph.agent import graph
+from legal_case_analyze_agent.langgraph.agent import graph # Updated import path
 
 
 # @asynccontextmanager
@@ -76,7 +76,7 @@ def main():
     """Run the uvicorn server."""
     port = int(os.getenv("PORT", "8000"))
     uvicorn.run(
-        "research_canvas.langgraph.demo:app",
+        "legal_case_analyze_agent.langgraph.demo:app", # Updated module path
         host="0.0.0.0",
         port=port,
         reload=True,
