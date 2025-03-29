@@ -52,6 +52,7 @@
 *   Successfully tested unknown case / manual input flow end-to-end.
 *   Corrected LangGraph routing logic in `agent.py` (added `route_message_node`, fixed conditional edge).
 *   Successfully tested chat routing logic end-to-end.
+*   Fixed report display issue by adding `copilotkit_emit_state` call in `format_report_node` within `agent.py` to explicitly push the final report string to the UI.
 
 ## Next Steps
 
@@ -67,5 +68,6 @@
 *   **MVP Data Retrieval Strategy:** Decided on a hybrid approach for `retrieve_case_node`. It will first check if the `caseName` matches a predefined list (~20-30 cases) and attempt scraping. If not found or scrape fails, it will signal the UI to request manual text pasting from the user.
 *   **API Key Handling:** Agent loads key from `app/src/agent/.env`. UI API route loads key from `app/src/ui/.env.local`.
 *   **CopilotKit Import:** Relying on installed `copilot-runtime` package.
+*   **Report Display:** Confirmed that the agent must explicitly emit the state containing the final `report` string using `copilotkit_emit_state` for it to appear in the UI, as the `WriteReport` tool is not used in the main analysis flow.
 
-*(This file tracks the current state of work and immediate plans. Updated after completing initial E2E tests.)*
+*(This file tracks the current state of work and immediate plans. Updated after fixing the report display issue.)*

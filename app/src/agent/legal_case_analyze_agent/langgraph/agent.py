@@ -10,8 +10,10 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage # Added AIMessage
+from langchain_core.runnables import RunnableConfig # Added import
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
+from copilotkit.langgraph import copilotkit_emit_state # Added import
 
 # Import the updated state definition and supporting types
 from legal_case_analyze_agent.langgraph.state import AgentState, Source # Updated import path
@@ -19,6 +21,7 @@ from legal_case_analyze_agent.langgraph.state import AgentState, Source # Update
 # Import helper functions
 from legal_case_analyze_agent.langgraph.known_cases import get_known_case_url # Updated import path
 from legal_case_analyze_agent.langgraph.scraper import scrape_case_text # Updated import path
+from legal_case_analyze_agent.langgraph.model import get_model # Added import
 
 
 # --- Node Functions ---
@@ -301,12 +304,24 @@ def analyze_case_node(state: AgentState) -> AgentState:
 
     return state
 
-def format_report_node(state: AgentState) -> AgentState:
-    """Node to format reportSections into a Markdown string."""
-    print("--- Executing Format Report Node ---")
-    current_logs = state.get('logs', []) # Get current logs
-    state['logs'] = current_logs + [{"message": "Formatting report...", "done": False}] # Append new log immediately
+async def format_report_node(state: AgentState, config: RunnableConfig) -> AgentState: # Made async and added config
+    """Node to format reportSections into a Markdown string and emit state."""
+    print("\n=== Format Report Node Debug ===")
+    print("1. Initial State Check:")
+    print("- State keys:", list(state.keys()))
+    print("- ReportSections present:", 'reportSections' in state)
+    print("- Report present before formatting:", 'report' in state)
+    
+    current_logs = state.get('logs', [])
+    state['logs'] = current_logs + [{"message": "Formatting report...", "done": False}]
     sections = state.get('reportSections', {})
+    
+    print("\n2. Report Sections Content:")
+    print("- Basic Info:", sections.get('basic_info', 'N/A'))
+    print("- Summary:", sections.get('summary', 'N/A'))
+    print("- Case Brief Keys:", list(sections.get('case_brief', {}).keys()))
+    print("- Number of Q&A items:", len(sections.get('cold_call_qa', [])))
+    
     brief = sections.get('case_brief', {})
     qa = sections.get('cold_call_qa', [])
 
@@ -358,10 +373,23 @@ def format_report_node(state: AgentState) -> AgentState:
 
 
     state['report'] = report_md.strip()
-    state['logs'][-1]['done'] = True # Mark formatting log as done
+    
+    print("\n3. Final Report Check:")
+    print("- Report length:", len(state['report']))
+    print("- Report preview (first 200 chars):", state['report'][:200])
+    print("- Report present after formatting:", 'report' in state)
+    print("- State keys after update:", list(state.keys()))
+    print("=== End Format Report Node Debug ===\n")
+
+    state['logs'][-1]['done'] = True
+
+    # Explicitly emit the state update to CopilotKit after formatting
+    print("--- Emitting final state update from format_report_node ---")
+    await copilotkit_emit_state(config, state)
+
     return state
 
-def chat_node(state: AgentState) -> AgentState:
+async def chat_node(state: AgentState, config: RunnableConfig) -> AgentState: # Made async and added config
     """
     Node to handle chat interactions about the current case report.
     Uses the current chat history and report context.
@@ -459,6 +487,8 @@ def chat_node(state: AgentState) -> AgentState:
         # Return the state, assuming LangGraph handles message appending based on node output
         # If the node needs to return the message explicitly:
         # return {"messages": [AIMessage(content=response_content)]}
+        # For now, just return the state as the placeholder doesn't modify messages directly
+        return state # Return state directly for placeholder
 
     except Exception as e:
         error_msg = f"Error during chat generation: {e}"
@@ -488,6 +518,38 @@ def handle_error_node(state: AgentState) -> AgentState:
     state['logs'] = current_logs
     # The workflow currently ends after this node. Recovery logic could be added later.
     return state
+
+
+async def send_proactive_message_node(state: AgentState, config: RunnableConfig) -> AgentState:
+    """Generates a proactive follow-up message after report generation."""
+    print("--- Executing Send Proactive Message Node ---")
+    current_logs = state.get('logs', [])
+    current_messages = state.get('messages', [])
+    report_preview = state.get('report', '')[:500] # Get a preview for context
+
+    log_message = "Generating proactive follow-up message..."
+    current_logs.append({"message": log_message, "done": False})
+    state['logs'] = current_logs
+
+    # Simple proactive message for now
+    proactive_message_content = "The case report has been generated. What aspects would you like to discuss further, or shall we move on to Cold Call practice?"
+
+    # Add the proactive message as an AIMessage
+    # IMPORTANT: This message should ideally be generated by an LLM based on the report,
+    # but for now, we use a static message.
+    proactive_ai_message = AIMessage(content=proactive_message_content)
+
+    # Update state
+    state['messages'] = current_messages + [proactive_ai_message]
+    current_logs[-1]['done'] = True
+    state['logs'] = current_logs
+
+    # Emit state so the UI shows the proactive message
+    print("--- Emitting state update from send_proactive_message_node ---")
+    await copilotkit_emit_state(config, state)
+
+    return state
+
 
 # --- Conditional Edge Logic ---
 
@@ -549,6 +611,7 @@ workflow.add_node("format_report_node", format_report_node)
 workflow.add_node("chat_node", chat_node)
 workflow.add_node("handle_error_node", handle_error_node)
 workflow.add_node("route_message", route_message_node) # Add the new router node function
+workflow.add_node("send_proactive_message_node", send_proactive_message_node) # Add the proactive message node
 
 # Set entry point to the new router
 workflow.set_entry_point("route_message") # Changed entry point
@@ -573,7 +636,9 @@ workflow.add_conditional_edges(
     }
 )
 workflow.add_edge("analyze_case_node", "format_report_node")
-workflow.add_edge("format_report_node", END) # Main analysis flow ends after formatting report
+# workflow.add_edge("format_report_node", END) # OLD: End after formatting
+workflow.add_edge("format_report_node", "send_proactive_message_node") # NEW: Go to proactive message node
+workflow.add_edge("send_proactive_message_node", END) # NEW: End after sending proactive message
 
 # After chat node finishes, loop back to router to decide next step (could be END or another node)
 # For now, let chat simply end the current invocation. CopilotKit will likely trigger a new one for the next message.

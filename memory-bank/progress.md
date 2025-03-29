@@ -43,6 +43,7 @@
 *   Successfully tested unknown case / manual input flow end-to-end.
 *   Corrected LangGraph routing logic in `agent.py` (added `route_message_node`, fixed conditional edge).
 *   Successfully tested chat routing logic end-to-end.
+*   Fixed report display issue by adding `copilotkit_emit_state` in `format_report_node` (`agent.py`).
 
 ## What's Left to Build
 
@@ -62,5 +63,6 @@
 *   Runtime errors encountered during initial testing (ModuleNotFound, missing UI API key, agent ID mismatch, Q&A prompt input) - Believed to be fixed.
 *   Basic Info and Summary generation issues resolved in latest test.
 *   Chat submission routing fixed. Chat responses are still placeholders.
+*   Report display in UI textarea is now working after agent fix.
 
-*(This file provides a snapshot of the project's completion status. Updated after completing initial E2E tests.)*
+*(This file provides a snapshot of the project's completion status. Updated after fixing the report display issue.)*

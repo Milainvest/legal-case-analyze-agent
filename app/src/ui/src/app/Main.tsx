@@ -4,19 +4,17 @@ import { AgentState } from "@/lib/types";
 import { useCoAgent } from "@copilotkit/react-core";
 import { CopilotChat } from "@copilotkit/react-ui";
 import { useCopilotChatSuggestions } from "@copilotkit/react-ui";
+import { useEffect } from "react";
 
 // Define the agent ID consistent with the backend server.py
 const AGENT_ID = "research_agent"; // Reverted to match server.py
 
 export default function Main() {
   // const { model, agent } = useModelSelectorContext(); // Removed context usage
-  const { state, setState } = useCoAgent<AgentState>({
-    name: AGENT_ID, // Use the fixed agent ID
-    // Updated initialState to match the new AgentState structure
+  const { state, setState, run } = useCoAgent<AgentState>({
+    name: AGENT_ID,
     initialState: {
-      // model: model, // Model selection might need to be handled differently now
-      model: "openai", // Hardcode default model or manage differently
-      // Removed duplicate model line below
+      model: "openai",
       caseName: "",
       caseText: "",
       reportSections: { basic_info: "", summary: "", case_brief: {}, cold_call_qa: [] },
@@ -26,6 +24,13 @@ export default function Main() {
       needsManualInput: false,
     },
   });
+
+  // デバッグ用のログを追加
+  useEffect(() => {
+    console.log("\n=== Main Component State Update ===");
+    console.log("State:", state);
+    console.log("=== End Main Component State Update ===\n");
+  }, [state]);
 
   // TODO: Update or remove chat suggestions if needed
   useCopilotChatSuggestions({
@@ -60,15 +65,9 @@ export default function Main() {
         >
           <CopilotChat
             className="h-full"
-            // TODO: Review onSubmitMessage logic. Clearing logs might be okay,
-            // but consider if other state resets are needed when starting a new case analysis.
             onSubmitMessage={async (message) => {
-              // For now, just pass the message. Agent handles context.
-              // If starting a new case analysis via chat is desired, more logic is needed here.
               console.log("Chat submitted:", message);
-              // Original log clearing logic:
-              // setState({ ...state, logs: [] });
-              // await new Promise((resolve) => setTimeout(resolve, 30));
+              await run();
             }}
             labels={{
               initial: "Enter a case name above to start analysis, or ask questions about the current report.",

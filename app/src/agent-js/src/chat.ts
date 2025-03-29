@@ -111,13 +111,28 @@ export async function chat_node(state: AgentState, config: RunnableConfig) {
   if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
     if (aiMessage.tool_calls[0].name === "WriteReport") {
       const report = aiMessage.tool_calls[0].args.report;
+      if (!report || typeof report !== 'string') {
+        console.error("Invalid report format:", report);
+        return {
+          messages: response,
+          error: "Invalid report format"
+        };
+      }
+      
+      console.log("Report generated:", {
+        length: report.length,
+        preview: report.slice(0, 100),
+        type: typeof report,
+        timestamp: new Date().toISOString()
+      });
+      
       return {
         report,
         messages: [
           aiMessage,
           new ToolMessage({
             tool_call_id: aiMessage.tool_calls![0]["id"]!,
-            content: "Report written.",
+            content: "Report written successfully.",
             name: "WriteReport",
           }),
         ],
@@ -136,6 +151,17 @@ export async function chat_node(state: AgentState, config: RunnableConfig) {
         ],
       };
     }
+  }
+
+  if (state.report && typeof state.report === 'string') {
+    console.log("Preserving existing report:", {
+      length: state.report.length,
+      timestamp: new Date().toISOString()
+    });
+    return {
+      report: state.report,
+      messages: response,
+    };
   }
 
   return {
