@@ -12,20 +12,23 @@ This document outlines the remaining tasks to complete the Minimum Viable Produc
     *   [X] Ensure successful scrape populates `state.caseText` and `state.sourcesConsulted` (logic added in `agent.py`).
     *   [X] Add necessary dependencies to `pyproject.toml` and update `poetry.lock` (`requests`, `beautifulsoup4`, `copilot-runtime` added).
 
-2.  **Implement `analyze_case_node` Logic (`agent.py` & new files):** [Completed - Needs Testing/Tuning]
-    *   [X] Set up LangChain and OpenAI API client integration (Basic structure added, API key check added).
-    *   [X] Develop specific prompts for the LLM to generate each required section in `state.reportSections` (Basic Info, Summary, Case Brief, Cold Call Q&A) based on `state.caseText` (All prompts refined, Basic Info/Summary confirmed working).
-    *   [X] Implement the LLM calls within the node (Placeholder calls refined, added debug logging).
-    *   [X] Implement logic to track and populate `state.sourcesConsulted` based on the analysis (e.g., primary URL if scraped) (MVP logic confirmed).
-    *   [X] Handle potential errors during LLM interaction (Basic handling added, refined error return structure).
+2.  **Implement `analyze_case_node` Logic (`agent.py` & new files):** [Refactored - Needs Testing]
+    *   [X] Set up LangChain and OpenAI API client integration.
+    *   [X] Develop prompts for LLM to generate report sections (Basic Info, Summary, Case Brief, Cold Call Q&A). JSON prompts improved.
+    *   [X] Implement LLM calls for section generation with error handling (returns default values on JSON parse error).
+    *   [X] Add prompt instructing LLM to format sections and call `WriteReport` tool.
+    *   [X] Implement LLM call with `WriteReport` tool binding.
+    *   [X] Extract report from tool call result and update `state.report` directly.
+    *   [X] Use `copilotkit_customize_config` to manage state emission (`emitIntermediateState` removed, `emit_messages`/`emit_tool_calls` set to false).
+    *   [X] Implement logic to track `state.sourcesConsulted`.
 
-3.  **Implement `format_report_node` Logic (`agent.py`):** [Completed - Tested OK for Known Case]
-    *   [X] Refine the Markdown formatting logic to create a clean `state.report` string from `state.reportSections` (Initial refinement done).
+3.  **~~Implement `format_report_node` Logic (`agent.py`):~~** [Removed]
+    *   ~~Refine the Markdown formatting logic.~~ (Functionality moved to LLM prompt within `analyze_case_node`).
 
-4.  **Implement `chat_node` Logic (`agent.py` & potentially `chat.py`):** [Completed - Needs Testing/Tuning]
-    *   [X] Adapt the node to receive user messages via the `MessagesState` (Placeholder added).
-    *   [X] Implement LLM call logic, providing context from `state.reportSections` and `state.caseText` (Placeholder added, refined example prompt).
-    *   [X] Ensure chat history is managed correctly (likely handled by `MessagesState` and CopilotKit - needs testing) (Placeholder logic assumes correct handling).
+4.  **Implement `chat_node` Logic (`agent.py` & potentially `chat.py`):** [Completed - Needs Testing]
+    *   [X] Adapt the node to receive user messages via the `MessagesState`.
+    *   [X] Implement LLM call logic, providing context from `state.reportSections` and `state.caseText`.
+    *   [X] Ensure chat history is managed correctly (handled by `MessagesState` and LangGraph).
 
 5.  **Refine Error Handling (`handle_error_node` in `agent.py`):** [Completed - Needs Testing]
     *   [X] Implement more robust error logging and state updates for workflow failures (Initial refinement done).
@@ -46,7 +49,7 @@ This document outlines the remaining tasks to complete the Minimum Viable Produc
 ## Testing & Integration
 
 8.  **Agent Testing:**
-    *   [ ] Write basic unit/integration tests for the implemented agent nodes (`retrieve`, `analyze`, `format`).
+    *   [ ] Write basic unit/integration tests for the implemented agent nodes (`retrieve`, `analyze`, `chat`).
 9.  **End-to-End Testing:** [Completed - Basic Flow OK]
     *   [X] Manually test the full MVP flow:
         *   [X] Input known case -> Get report.
@@ -56,7 +59,8 @@ This document outlines the remaining tasks to complete the Minimum Viable Produc
 ## Documentation
 
 10. **Update Memory Bank:**
-    *   [ ] Keep `activeContext.md` and `progress.md` updated as tasks are completed.
-    *   [ ] Update `systemPatterns.md` and `techContext.md` if implementation details deviate significantly from the plan.
+    *   [X] Keep `activeContext.md` and `progress.md` updated as tasks are completed.
+    *   [X] Update `systemPatterns.md` to reflect report generation refactoring.
+    *   [ ] Update `techContext.md` if implementation details deviate significantly from the plan.
 
 *(Note: Database setup (PostgreSQL/Vector DB) is deferred post-MVP based on the current plan focusing on manual input fallback and limited scraping).*

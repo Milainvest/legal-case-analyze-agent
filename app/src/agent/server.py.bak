@@ -25,7 +25,7 @@ app = FastAPI(
 )
 
 origins = [
-    "http://localhost:3000",  # Default Next.js dev port
+    "http://localhost:3000", # Default Next.js dev port
     # Add other origins if needed
 ]
 app.add_middleware(
@@ -39,22 +39,20 @@ app.add_middleware(
 # Define the agent ID - MUST match the 'name' used in useCoAgent/useCopilotChat on the frontend
 AGENT_ID = "research_agent"
 
-# Create the CopilotKit endpoint with LangGraph integration
 sdk = CopilotKitRemoteEndpoint(
     agents=[
         LangGraphAgent(
             name=AGENT_ID,
             description="Agent for analyzing legal cases.",
-            graph=langgraph_agent,  # Pass the compiled graph with SQLite checkpointer
+            graph=langgraph_agent, # Pass the compiled graph (which includes the checkpointer)
         ),
-    ],
+    ]
 )
 
-# Add CopilotKit endpoint
+# Add the standard CopilotKit FastAPI endpoint
 add_fastapi_endpoint(app, sdk, "/copilotkit/")
 print(f"CopilotKit endpoint mounted at /copilotkit/, serving agent: {AGENT_ID}")
 
-# Ensure FastAPI handles root path correctly
 @app.get("/")
 async def root():
     return {"message": f"Legal Case Analysis Agent API ({AGENT_ID}) is running."}
