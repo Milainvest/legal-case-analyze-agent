@@ -29,7 +29,8 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {/* Wrap the application with CopilotKit provider */}
-        <CopilotKit runtimeUrl="/api/copilotkit/agent">
+        {/* Point runtimeUrl to the Python backend WITH trailing slash */}
+        <CopilotKit runtimeUrl="/api/copilotkit/">
           {children}
         </CopilotKit>
       </body>
