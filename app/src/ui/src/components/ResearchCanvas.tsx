@@ -38,65 +38,44 @@ export function ResearchCanvas() {
   const { state, setState, run } = useResearchState();
   const copilot = useCopilotContext();
 
-  // WebSocketの接続状態を監視
+  // WebSocket connection status monitoring
   useEffect(() => {
+    let mounted = true;
+    let lastStatus: typeof initialAgentState.connectionStatus | null = null;
+
     const checkWebSocket = () => {
-      // @ts-ignore - WebSocketの状態を確認
+      if (!mounted) return;
+
+      // @ts-ignore - Access WebSocket instance
       const ws = window._copilotkit_ws;
-      if (ws) {
-        const readyState = ws.readyState;
-        const connectionStatus =
-          readyState === WebSocket.CONNECTING ? ('connecting' as const) :
-          readyState === WebSocket.OPEN ? ('connected' as const) :
-          readyState === WebSocket.CLOSING || readyState === WebSocket.CLOSED ? ('disconnected' as const) :
-          ('error' as const);
+      const newStatus = ws ? 
+        ws.readyState === WebSocket.CONNECTING ? 'connecting' :
+        ws.readyState === WebSocket.OPEN ? 'connected' :
+        ws.readyState === WebSocket.CLOSING || ws.readyState === WebSocket.CLOSED ? 'disconnected' :
+        'error'
+        : 'disconnected';
 
-        // Only update connectionStatus if prevState exists and status changed
-        setState((prevState) => {
-          const currentBaseState = prevState ?? initialAgentState;
-          // Avoid unnecessary state updates if status hasn't changed
-          if (currentBaseState.connectionStatus === connectionStatus) {
-            return currentBaseState; // Return previous state to prevent re-render
-          }
-          // Ensure a valid AgentState object is always returned
-          return {
-            ...(currentBaseState as AgentState), // Type assertion might be needed if TS still complains
-            connectionStatus
-          };
-        });
-
-        // console.log("WebSocket state:", { // Reduce logging frequency if needed
-        //   readyState,
-        //   connectionStatus,
-        //   bufferedAmount: ws.bufferedAmount,
-        //   url: ws.url
-        // });
-      } else {
-        // console.log("WebSocket not initialized");
-        // Only update connectionStatus, preserve other state fields
-        setState((prevState) => {
-           // Ensure we have a valid previous state to spread, fallback to initialAgentState
-          const currentBaseState = prevState ?? initialAgentState;
-           // Avoid unnecessary state updates if status hasn't changed
-           if (currentBaseState.connectionStatus === 'disconnected') {
-             return currentBaseState;
-           }
-          // Ensure a valid AgentState object is always returned
-          return {
-            ...(currentBaseState as AgentState), // Type assertion might be needed
-            connectionStatus: 'disconnected' as const
+      // Only update state if status actually changed
+      if (newStatus !== lastStatus) {
+        lastStatus = newStatus;
+        setState(prev => {
+          const current = prev ?? initialAgentState;
+          return current.connectionStatus === newStatus ? current : {
+            ...current,
+            connectionStatus: newStatus
           };
         });
       }
     };
 
-    // 定期的に接続状態を確認
     const interval = setInterval(checkWebSocket, 5000);
-    checkWebSocket(); // 初回チェック
+    checkWebSocket(); // Initial check
 
-    return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setState]); // Only depend on setState
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []); // Empty dependency array since we only need to set up the interval once
 
   // 状態更新の監視を強化 (Commented out for debugging)
   // useEffect(() => {
@@ -396,6 +375,12 @@ export function ResearchCanvas() {
               rows={15}
               aria-label="Manual case text input"
               className="bg-background px-6 py-8 border-gray-300 shadow-sm rounded-xl text-sm focus-visible:ring-1 placeholder:text-slate-400 mb-2"
+              style={{
+                fontFamily: "monospace",
+                whiteSpace: "pre-wrap",
+                overflowY: "auto",
+                resize: "none"
+              }}
             />
             <Button onClick={handleManualSubmit} disabled={!manualCaseText.trim()}>
               Submit Case Text
@@ -457,19 +442,32 @@ export function ResearchCanvas() {
             </div>
           )} */}
 
-          <Textarea
-            key={`report-${state?.report ? 'present' : 'empty'}-${Date.now()}`} // Add null check
-            data-test-id="case-report"
-            placeholder={state?.error ? "An error occurred. Please try again." : "The generated case report will appear here..."} // Add null check
-            value={state?.report || ""} // Add null check
-            readOnly={true} // Add readOnly back
-            rows={15}
-            aria-label="Generated case report"
-            className={`bg-background px-6 py-8 border-0 shadow-none rounded-xl text-md font-extralight focus-visible:ring-0 placeholder:text-slate-400 overflow-y-auto ${ // Add overflow-y-auto
-              state?.error ? 'border-red-200' : '' // Add null check
-            }`}
-            style={{ minHeight: "300px" }}
-          />
+          <div className="relative">
+            <Textarea
+              key={`report-${state?.report ? 'present' : 'empty'}-${Date.now()}`}
+              data-test-id="case-report"
+              placeholder={state?.error ? "An error occurred. Please try again." : "The generated case report will appear here..."}
+              value={state?.report || ""}
+              readOnly={true}
+              rows={15}
+              aria-label="Generated case report"
+              className={`bg-background px-6 py-8 border-0 shadow-none rounded-xl text-md font-extralight focus-visible:ring-0 placeholder:text-slate-400 h-[500px] font-mono whitespace-pre-wrap overflow-y-auto resize-none ${
+                state?.error ? 'border-red-200' : ''
+              }`}
+            />
+            {state?.report && (
+              <Button
+                onClick={() => {
+                  navigator.clipboard.writeText(state.report);
+                }}
+                className="absolute top-2 right-2 p-2 text-xs bg-gray-100 hover:bg-gray-200"
+                size="sm"
+                variant="ghost"
+              >
+                Copy
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>
