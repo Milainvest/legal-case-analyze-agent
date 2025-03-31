@@ -10,6 +10,8 @@
 *   Fixing UI trigger for agent workflow.
 *   Fixing agent workflow routing for chat vs. analysis.
 *   Completing initial End-to-End testing.
+*   Resolving JSON parsing errors and prompt variable errors during report generation.
+*   Ensuring report display persists after generation and chat interactions.
 
 ## Recent Changes
 
@@ -53,12 +55,19 @@
 *   Corrected LangGraph routing logic in `agent.py` (added `route_message_node`, fixed conditional edge).
 *   Successfully tested chat routing logic end-to-end.
 *   Fixed report display issue by adding `copilotkit_emit_state` call in `format_report_node` within `agent.py` to explicitly push the final report string to the UI.
+*   Restored chat functionality by replacing placeholder logic with actual LLM call in `chat_node` within `agent.py` after code reversion.
+*   Removed `send_proactive_message_node` from `agent.py` workflow to resolve routing issue where suggestion clicks were incorrectly ending the flow.
+*   Refactored report generation in `agent.py` to align with CopilotKit examples (using `WriteReport` tool and direct state update).
+*   Addressed JSON parsing errors and prompt variable errors in `analyze_case_node` by improving prompts (escaping curly braces) and error handling in `run_chain`.
+*   Modified `retrieve_case_node` reset logic to prevent clearing report during chat.
+*   Modified `chat_node` to explicitly return `report` state to prevent UI reset.
 
 ## Next Steps
 
-*   Update `progress.md` and `docs/task.md`.
+*   Update `progress.md`, `systemPatterns.md`, and `docs/task.md`.
+*   Test if JSON parsing errors are resolved and report generation completes successfully.
+*   Test if the text area reset issue is resolved after chat interactions.
 *   Begin Agent Testing (unit/integration tests - Task 8).
-*   Continue refining placeholder logic (prompts, scraping, error handling) based on further testing/needs.
 
 ## Active Decisions & Considerations
 
@@ -68,6 +77,8 @@
 *   **MVP Data Retrieval Strategy:** Decided on a hybrid approach for `retrieve_case_node`. It will first check if the `caseName` matches a predefined list (~20-30 cases) and attempt scraping. If not found or scrape fails, it will signal the UI to request manual text pasting from the user.
 *   **API Key Handling:** Agent loads key from `app/src/agent/.env`. UI API route loads key from `app/src/ui/.env.local`.
 *   **CopilotKit Import:** Relying on installed `copilot-runtime` package.
-*   **Report Display:** Confirmed that the agent must explicitly emit the state containing the final `report` string using `copilotkit_emit_state` for it to appear in the UI, as the `WriteReport` tool is not used in the main analysis flow.
+*   **Report Generation & State:** Report is generated via LLM calling `WriteReport` tool within `analyze_case_node`. The node extracts the report from the tool call and updates `state['report']` directly before returning the final state. A final `copilotkit_emit_state` sends necessary UI state. JSON prompts and error handling improved.
+*   **Chat Node Implementation:** `chat_node` preserves `report` state when returning updates.
+*   **Routing Logic:** `route_message` considers report existence. `retrieve_case_node` reset logic refined.
 
-*(This file tracks the current state of work and immediate plans. Updated after fixing the report display issue.)*
+*(This file tracks the current state of work and immediate plans. Updated after addressing report generation errors and UI reset issues.)*
